@@ -1,4 +1,4 @@
-name: Build ioscado IPA (Force iOS Only)
+name: Build ioscado IPA (Final Fix)
 
 on:
   push:
@@ -21,18 +21,16 @@ jobs:
       run: dotnet new globaljson --sdk-version 8.0.400 --roll-forward latestFeature
         
     - name: Install MAUI Workload
-      # Cài maui cơ bản là đủ
       run: dotnet workload install maui
 
     - name: Publish App
-      # SỬA QUAN TRỌNG Ở ĐÂY:
-      # Thêm tham số: -p:TargetFrameworks=net8.0-ios
-      # Lệnh này ép hệ thống coi như dự án chỉ có đúng 1 mục tiêu là iOS, bỏ qua Android hoàn toàn.
+      # SỬA Ở ĐÂY: Thêm "-r ios-arm64" để ép build cho iPhone thật
       run: |
-        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-" -p:CheckEolTargetFramework=false -p:TargetFrameworks=net8.0-ios
+        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -r ios-arm64 -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-" -p:CheckEolTargetFramework=false -p:TargetFrameworks=net8.0-ios
     
     - name: Create IPA
       run: |
+        # Đường dẫn này giờ chắc chắn đúng vì ta đã chỉ định ios-arm64
         cd ioscado/bin/Release/net8.0-ios/ios-arm64/publish/
         
         mkdir Payload
