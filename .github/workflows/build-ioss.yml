@@ -1,4 +1,4 @@
-name: Build ioscado IPA (Final Fix)
+name: Build ioscado IPA (Force ARM64)
 
 on:
   push:
@@ -24,13 +24,14 @@ jobs:
       run: dotnet workload install maui
 
     - name: Publish App
-      # SỬA Ở ĐÂY: Thêm "-r ios-arm64" để ép build cho iPhone thật
+      # SỬA CHỐT HẠ Ở ĐÂY: 
+      # Thêm tham số: -p:PlatformTarget=arm64
+      # Ý nghĩa: "Tao không cần biết mày mặc định là gì, bắt buộc phải build ra ARM64 cho tao!"
       run: |
-        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -r ios-arm64 -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-" -p:CheckEolTargetFramework=false -p:TargetFrameworks=net8.0-ios
+        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -r ios-arm64 -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-" -p:CheckEolTargetFramework=false -p:TargetFrameworks=net8.0-ios -p:PlatformTarget=arm64
     
     - name: Create IPA
       run: |
-        # Đường dẫn này giờ chắc chắn đúng vì ta đã chỉ định ios-arm64
         cd ioscado/bin/Release/net8.0-ios/ios-arm64/publish/
         
         mkdir Payload
