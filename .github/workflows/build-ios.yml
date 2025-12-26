@@ -1,4 +1,4 @@
-name: Build ioscado IPA (Fix Android Error)
+name: Build ioscado IPA (Subfolder Final)
 
 on:
   push:
@@ -18,22 +18,25 @@ jobs:
         dotnet-version: '8.0.x'
         
     - name: Install MAUI Workload
-      # SỬA Ở ĐÂY: Đổi "maui-ios" thành "maui" để nó cài cả Android luôn
+      # SỬA LỖI 1: Cài "maui" thay vì "maui-ios" để fix lỗi thiếu Android
       run: dotnet workload install maui
 
     - name: Publish App
-      # Lệnh build vẫn giữ nguyên
+      # SỬA LỖI 2: Chỉ định rõ thư mục con "ioscado/"
       run: |
-        dotnet publish ioscado.csproj -f net8.0-ios -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-"
+        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-"
     
     - name: Create IPA
       run: |
-        cd bin/Release/net8.0-ios/ios-arm64/publish/
+        # SỬA LỖI 3: Vào đúng thư mục con để tìm file .app
+        cd ioscado/bin/Release/net8.0-ios/ios-arm64/publish/
         
         mkdir Payload
         mv *.app Payload/
         zip -r ioscado.ipa Payload
-        mv ioscado.ipa ../../../../../
+        
+        # Di chuyển ra ngoài 6 cấp (đếm kỹ: publish->arm64->ios->net8.0->Release->bin->ioscado->Root)
+        mv ioscado.ipa ../../../../../../
 
     - name: Upload IPA
       uses: actions/upload-artifact@v4
