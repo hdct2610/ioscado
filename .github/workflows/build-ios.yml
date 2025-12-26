@@ -1,4 +1,4 @@
-name: Build ioscado IPA (Subfolder Final)
+name: Build ioscado IPA (Fix SDK Mismatch)
 
 on:
   push:
@@ -16,26 +16,27 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
+
+    - name: Create global.json to Force .NET 8
+      # BƯỚC QUAN TRỌNG MỚI THÊM: Ép máy chủ dùng .NET 8, cấm dùng .NET 10/9
+      run: dotnet new globaljson --sdk-version 8.0.400 --roll-forward latestFeature
         
     - name: Install MAUI Workload
-      # SỬA LỖI 1: Cài "maui" thay vì "maui-ios" để fix lỗi thiếu Android
       run: dotnet workload install maui
 
     - name: Publish App
-      # SỬA LỖI 2: Chỉ định rõ thư mục con "ioscado/"
+      # Thêm cờ -p:CheckEolTargetFramework=false để tắt cảnh báo hỗ trợ nếu có
       run: |
-        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-"
+        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-" -p:CheckEolTargetFramework=false
     
     - name: Create IPA
       run: |
-        # SỬA LỖI 3: Vào đúng thư mục con để tìm file .app
         cd ioscado/bin/Release/net8.0-ios/ios-arm64/publish/
         
         mkdir Payload
         mv *.app Payload/
         zip -r ioscado.ipa Payload
         
-        # Di chuyển ra ngoài 6 cấp (đếm kỹ: publish->arm64->ios->net8.0->Release->bin->ioscado->Root)
         mv ioscado.ipa ../../../../../../
 
     - name: Upload IPA
