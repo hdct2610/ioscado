@@ -1,4 +1,4 @@
-name: Build ioscado IPA (Fix Trimmer)
+name: Build ioscado IPA (FINAL RESCUE)
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
 
 jobs:
   build:
-    # Vẫn dùng macos-14 (Xcode 15.4) cho iOS 17
-    runs-on: macos-14
+    # 1. Bắt buộc dùng macOS 15 để có Xcode 16 (Thỏa mãn yêu cầu của Microsoft)
+    runs-on: macos-15
     
     steps:
     - uses: actions/checkout@v4
@@ -25,11 +25,12 @@ jobs:
       run: dotnet workload install maui
 
     - name: Publish App
-      # SỬA CHỮA CHỐT HẠ:
-      # 1. XÓA: -p:PublishTrimmed=false (Vì gây lỗi vừa rồi)
-      # 2. ĐỔI THÀNH: -p:MtouchLink=None (Để tắt Linker, tránh lỗi thiếu file và lỗi iOS 18)
+      # CÁC THAM SỐ QUAN TRỌNG:
+      # -p:SupportedOSPlatformVersion=14.0 -> Đảm bảo chạy tốt trên iOS 17, 16, 15, 14.
+      # -p:MtouchLink=None -> Tắt Linker để tránh lỗi thiếu file thư viện (chấp nhận file nặng hơn tí nhưng chắc ăn).
+      # -p:_SuppressSdkMismatch=true -> Bỏ qua các cảnh báo lệch version.
       run: |
-        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -r ios-arm64 -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-" -p:CheckEolTargetFramework=false -p:TargetFrameworks=net8.0-ios -p:PlatformTarget=arm64 -p:_SuppressSdkMismatch=true -p:SupportedOSPlatformVersion=15.0 -p:MtouchLink=None
+        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -r ios-arm64 -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-" -p:CheckEolTargetFramework=false -p:TargetFrameworks=net8.0-ios -p:PlatformTarget=arm64 -p:_SuppressSdkMismatch=true -p:SupportedOSPlatformVersion=14.0 -p:MtouchLink=None
     
     - name: Create IPA
       run: |
