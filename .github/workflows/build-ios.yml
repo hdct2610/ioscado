@@ -1,4 +1,4 @@
-name: Build ioscado IPA (Fix SDK Mismatch)
+name: Build ioscado IPA (Final Fix Xcode)
 
 on:
   push:
@@ -7,7 +7,8 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    # THAY ĐỔI 1: Nâng cấp lên macos-15 (Sequoia) để có Xcode 16 & iOS 18 SDK
+    runs-on: macos-15
     
     steps:
     - uses: actions/checkout@v4
@@ -18,16 +19,16 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Create global.json to Force .NET 8
-      # BƯỚC QUAN TRỌNG MỚI THÊM: Ép máy chủ dùng .NET 8, cấm dùng .NET 10/9
       run: dotnet new globaljson --sdk-version 8.0.400 --roll-forward latestFeature
         
     - name: Install MAUI Workload
       run: dotnet workload install maui
 
     - name: Publish App
-      # Thêm cờ -p:CheckEolTargetFramework=false để tắt cảnh báo hỗ trợ nếu có
+      # THAY ĐỔI 2: Thêm -p:PublishTrimmed=false và -p:MtouchLink=SdkOnly
+      # Ý nghĩa: Tắt tính năng "cắt gọt" code quá mức (Trimmer) để tránh lỗi thiếu thư viện iOS 18
       run: |
-        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-" -p:CheckEolTargetFramework=false
+        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -r ios-arm64 -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-" -p:CheckEolTargetFramework=false -p:TargetFrameworks=net8.0-ios -p:PlatformTarget=arm64 -p:PublishTrimmed=false -p:MtouchLink=SdkOnly
     
     - name: Create IPA
       run: |
