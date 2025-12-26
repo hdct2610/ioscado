@@ -1,4 +1,4 @@
-name: Build Cado Mobile IPA (TrollStore)
+name: Build ioscado IPA (Subfolder)
 
 on:
   push:
@@ -20,25 +20,23 @@ jobs:
     - name: Install MAUI Workload
       run: dotnet workload install maui-ios
 
-    - name: Publish App (Unsigned)
-      # QUAN TRỌNG: Đã thêm đường dẫn "ioscado/ioscado.csproj" vào lệnh bên dưới
+    - name: Publish App
+      # Đã thêm tên thư mục ioscado/ vào trước
       run: |
         dotnet publish ioscado/ioscado.csproj -f net8.0-ios -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-"
     
-    - name: Create IPA for TrollStore
+    - name: Create IPA
       run: |
-        # 1. Tìm đúng thư mục chứa file .app (Lưu ý đường dẫn có thêm ioscado)
+        # Đã thêm ioscado/ vào đường dẫn
         cd ioscado/bin/Release/net8.0-ios/ios-arm64/publish/
         
-        # 2. Tạo folder Payload và đóng gói
         mkdir Payload
         mv *.app Payload/
         zip -r ioscado.ipa Payload
-        
-        # 3. Di chuyển file ipa ra ngoài để upload
+        # Di chuyển ra xa hơn 1 cấp
         mv ioscado.ipa ../../../../../../
 
-    - name: Upload IPA Artifact
+    - name: Upload IPA
       uses: actions/upload-artifact@v4
       with:
         name: ioscado-IPA
