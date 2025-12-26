@@ -1,0 +1,48 @@
+name: Build ioscado IPA (Force iOS Only)
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Create global.json to Force .NET 8
+      run: dotnet new globaljson --sdk-version 8.0.400 --roll-forward latestFeature
+        
+    - name: Install MAUI Workload
+      # Cài maui cơ bản là đủ
+      run: dotnet workload install maui
+
+    - name: Publish App
+      # SỬA QUAN TRỌNG Ở ĐÂY:
+      # Thêm tham số: -p:TargetFrameworks=net8.0-ios
+      # Lệnh này ép hệ thống coi như dự án chỉ có đúng 1 mục tiêu là iOS, bỏ qua Android hoàn toàn.
+      run: |
+        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-" -p:CheckEolTargetFramework=false -p:TargetFrameworks=net8.0-ios
+    
+    - name: Create IPA
+      run: |
+        cd ioscado/bin/Release/net8.0-ios/ios-arm64/publish/
+        
+        mkdir Payload
+        mv *.app Payload/
+        zip -r ioscado.ipa Payload
+        
+        mv ioscado.ipa ../../../../../../
+
+    - name: Upload IPA
+      uses: actions/upload-artifact@v4
+      with:
+        name: ioscado-IPA
+        path: ioscado.ipa
