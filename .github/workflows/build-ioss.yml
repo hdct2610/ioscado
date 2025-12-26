@@ -1,4 +1,4 @@
-name: Build ioscado IPA (Force ARM64)
+name: Build ioscado IPA (iOS 17 Stable)
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
 
 jobs:
   build:
+    # QUAY VỀ MACOS-14 (Chứa Xcode 15.4 - Tương thích tốt nhất iOS 17)
     runs-on: macos-14
     
     steps:
@@ -24,11 +25,11 @@ jobs:
       run: dotnet workload install maui
 
     - name: Publish App
-      # SỬA CHỐT HẠ Ở ĐÂY: 
-      # Thêm tham số: -p:PlatformTarget=arm64
-      # Ý nghĩa: "Tao không cần biết mày mặc định là gì, bắt buộc phải build ra ARM64 cho tao!"
+      # SỬA CHỮA:
+      # 1. Thêm -p:_SuppressSdkMismatch=true: Để ép .NET 8 chịu chạy trên Xcode 15.4 cũ hơn
+      # 2. Thêm -p:SupportedOSPlatformVersion=15.0: Để đảm bảo chạy được từ iOS 15 đến iOS 17
       run: |
-        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -r ios-arm64 -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-" -p:CheckEolTargetFramework=false -p:TargetFrameworks=net8.0-ios -p:PlatformTarget=arm64
+        dotnet publish ioscado/ioscado.csproj -f net8.0-ios -r ios-arm64 -c Release -p:ArchiveOnBuild=true -p:EnableCodeSigning=false -p:CodesignKey="-" -p:CheckEolTargetFramework=false -p:TargetFrameworks=net8.0-ios -p:PlatformTarget=arm64 -p:PublishTrimmed=false -p:MtouchLink=SdkOnly -p:_SuppressSdkMismatch=true -p:SupportedOSPlatformVersion=15.0
     
     - name: Create IPA
       run: |
